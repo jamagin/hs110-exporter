@@ -23,36 +23,31 @@ const influx = new Influx.InfluxDB({
                 power: Influx.FieldType.FLOAT,
             },
             tags: [
-                'host'
+                'host', 'alias'
             ]
         }
     ]
 });
 
 class Reporter {
-    export(res) {
+    export(res, sysInfo) {
         influx.writePoints([
             {
                 measurement: 'power_consumption',
-                tags: {host: hostname},
+                tags: {
+                    host: hostname,
+                    alias: sysInfo.alias
+                },
                 fields: res,
             }
         ])
     }
-    getDevice () {
-        return client.getDevice({host: process.env.DEVICE_IP_ADDR})
-            .then(device => {
-                this.device = device;
-                return device;
-            })
-    }
     constructor() {
-        this.timer = process.env.TIMER || 5000;
-        this.device = null;
+        this.timer = process.env.TIMER || 1500;
     }
 
-    query() {
-        return this.device.emeter.getRealtime()
+    query(device) {
+        return device.emeter.getRealtime()
     }
 
     format(raw) {
@@ -60,9 +55,9 @@ class Reporter {
         return raw
     }
 
-    log(res) {
+    log(res, sysInfo) {
         if (!process.env.DEBUG) return res;
-        console.log(res);
+        console.log(sysInfo.alias, res);
         return res
     }
 
@@ -80,15 +75,19 @@ class Reporter {
 
     run() {
         this.checkDatabase()
-            .then(_ => this.getDevice())
-            .then(_ => {
-                setInterval(_ => {
-                    this.query()
-                        .then(res => this.format(res))
-                        .then(res => this.log(res))
-                        .then(res => this.export(res))
-                }, this.timer)
-            });
+            .then(_ => client.startDiscovery().on('device-new',
+                dev => this.deviceFound(dev)));
+    }
+
+    deviceFound(device) {
+        device.getSysInfo().then(sysInfo => {
+            setInterval(_ => {
+                this.query(device)
+                    .then(res => this.format(res))
+                    .then(res => this.log(res, sysInfo))
+                    .then(res => this.export(res, sysInfo))
+            }, this.timer);
+        });
     }
 }
 
