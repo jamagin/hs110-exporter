@@ -2,7 +2,7 @@ const Influx = require('influx');
 const os = require('os');
 
 const hostname = process.env.HOSTNAME || os.hostname();
-const db = process.env.INFLUX_DB || 'miners_db';
+const db = process.env.INFLUX_DB || 'hs110_db';
 
 const { Client } = require('tplink-smarthome-api');
 
@@ -11,6 +11,8 @@ const client = new Client();
 const influx = new Influx.InfluxDB({
     host: process.env.INFLUX_HOST || 'localhost',
     database: db,
+    username: process.env.INFLUX_USERNAME || 'root',
+    password: process.env.INFLUX_PASSWORD || 'root',
     schema: [
         {
             measurement: 'power_consumption',
