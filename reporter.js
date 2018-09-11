@@ -3,6 +3,7 @@ const os = require('os');
 
 const hostname = process.env.HOSTNAME || os.hostname();
 const db = process.env.INFLUX_DB || 'hs110_db';
+const broadcast_addr = process.env.BROADCAST_ADDR
 
 const { Client } = require('tplink-smarthome-api');
 
@@ -75,8 +76,8 @@ class Reporter {
 
     run() {
         this.checkDatabase()
-            .then(_ => client.startDiscovery().on('device-new',
-                dev => this.deviceFound(dev)));
+            .then(_ => client.startDiscovery(broadcast_addr ? {'broadcast': broadcast_addr} : {})
+            .on('device-new', dev => this.deviceFound(dev)));
     }
 
     deviceFound(device) {

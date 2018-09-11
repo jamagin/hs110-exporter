@@ -16,7 +16,18 @@ INFLUX_HOST=influx.example.com \
 INFLUX_USERNAME=root \
 INFLUX_PASSWORD=blah \
 HOSTNAME=rig_github \
+BROADCAST_ADDR=10.0.0.255 \
 npm start
+```
+
+All environment variables are optional, defaults are:
+```
+TIMER=1500
+DEBUG=<unset>
+INFLUX_HOST=localhost
+INFLUX_PASSWORD=root
+HOSTNAME=<os.hostname()>
+BROADCAST_ADDR=<defaults to 255.255.255.255 in tplink_smarthome_api>
 ```
 
 # Docker usage
